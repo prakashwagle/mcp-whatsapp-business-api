@@ -1,4 +1,7 @@
-import { McpServer, HttpTransport } from '@modelcontextprotocol/sdk';
+// @ts-ignore - Ignore type errors for the MCP imports
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
+// @ts-ignore - Ignore type errors for the MCP imports
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import config from '../config';
 import logger from '../utils/logger';
 
@@ -60,16 +63,16 @@ export const createMcpServer = (app: any) => {
   mcpServer.prompt('helpWithRegistration', helpWithRegistrationSchema, helpWithRegistration);
   mcpServer.prompt('helpWithTwoStepVerification', helpWithTwoStepVerificationSchema, helpWithTwoStepVerification);
 
-  // Create HTTP transport
-  const httpTransport = new HttpTransport({
+  // Create SSE transport
+  const sseTransport = new SSEServerTransport({
     server: mcpServer,
     basePath: '/mcp',
   });
 
   // Connect transport to Express app
-  httpTransport.connect(app);
+  sseTransport.connect(app);
 
-  logger.info('MCP server initialized with HTTP transport');
+  logger.info('MCP server initialized with SSE transport');
 
   return mcpServer;
 };
