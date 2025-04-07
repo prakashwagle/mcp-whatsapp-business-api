@@ -1,6 +1,6 @@
 # WhatsApp Business API MCP Integration
 
-A Node.js application for integrating with the WhatsApp Business API using the Meta Cloud Platform (MCP).
+A Node.js-based Model Context Protocol (MCP) Server implementation that provides a standardized interface for MCP clients to interact with the WhatsApp Business API
 
 ## Features
 
@@ -15,7 +15,7 @@ A Node.js application for integrating with the WhatsApp Business API using the M
 - Node.js (v16 or higher)
 - npm or yarn
 - WhatsApp Business API Account
-- Meta Cloud Platform Access
+- Model Context Protocol sdk
 
 ## Installation
 
@@ -34,7 +34,7 @@ npm install
 ```env
 PORT=3000
 NODE_ENV=development
-WHATSAPP_API_URL=https://graph.facebook.com/v17.0
+WHATSAPP_API_URL=https://graph.facebook.com/v21.0
 WHATSAPP_API_TOKEN=your_api_token_here
 WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id_here
 WHATSAPP_BUSINESS_ACCOUNT_ID=your_business_account_id_here
