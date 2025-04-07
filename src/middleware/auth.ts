@@ -1,25 +1,36 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-import { config } from '../config';
-import { logger } from '../utils/logger';
+import config from '../config';
 
 export const authenticate = (req: Request, res: Response, next: NextFunction) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ error: 'No token provided' });
-    }
-
-    const token = authHeader.split(' ')[1];
+    // Get token from header
+    const token = req.header('x-api-key');
+    
+    // Check if token exists
     if (!token) {
-      return res.status(401).json({ error: 'Invalid token format' });
+      return res.status(401).json({
+        success: false,
+        error: 'No API key provided, access denied',
+      });
     }
-
-    const decoded = jwt.verify(token, config.jwt.secret);
-    req.user = decoded;
+    
+    // In a real application, you would validate the token against a database
+    // or other authentication service. For this example, we'll use a simple
+    // check against an environment variable.
+    // WARNING: This is just a placeholder - do not use this in production!
+    if (token !== process.env.WHATSAPP_ACCESS_TOKEN) {
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid API key, access denied',
+      });
+    }
+    
+    // If token is valid, proceed
     next();
   } catch (error) {
-    logger.error('Authentication error:', error);
-    return res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({
+      success: false,
+      error: 'Authentication failed',
+    });
   }
-}; 
+};
