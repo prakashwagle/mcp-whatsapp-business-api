@@ -1,23 +1,36 @@
-export interface WhatsAppMessage {
+export interface Message {
+  id: string;
+  from: string;
   to: string;
-  type: 'text' | 'image' | 'document' | 'template';
-  content: {
-    text?: string;
-    caption?: string;
-    mediaUrl?: string;
-    templateName?: string;
-    templateData?: Record<string, any>;
-  };
-  metadata?: {
-    messageId?: string;
-    timestamp?: number;
-    [key: string]: any;
-  };
+  type: MessageType;
+  content: string;
+  status: MessageStatus;
+  timestamp: Date;
+  metadata?: Record<string, any>;
 }
 
-export interface MessageStatus {
-  messageId: string;
-  status: 'sent' | 'delivered' | 'read' | 'failed';
-  timestamp: number;
-  error?: string;
+export enum MessageType {
+  TEXT = 'text',
+  IMAGE = 'image',
+  VIDEO = 'video',
+  AUDIO = 'audio',
+  DOCUMENT = 'document',
+  LOCATION = 'location',
+  CONTACT = 'contact',
+  INTERACTIVE = 'interactive',
+  TEMPLATE = 'template'
 }
+
+export enum MessageStatus {
+  SENT = 'sent',
+  DELIVERED = 'delivered',
+  READ = 'read',
+  FAILED = 'failed'
+}
+
+export interface MessageSendRequest {
+  to: string;
+  type: MessageType;
+  content: string;
+  metadata?: Record<string, any>;
+} 
