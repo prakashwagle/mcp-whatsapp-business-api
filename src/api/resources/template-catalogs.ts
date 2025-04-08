@@ -56,7 +56,7 @@ export function setupTemplateCatalogsResource(server: McpServer, apiClient: What
   server.resource(
     "template_details",
     new ResourceTemplate("whatsapp://templates/{template_name}", {
-      list: "whatsapp://templates"
+      list: undefined
     }),
     async (uri, { template_name }) => {
       try {

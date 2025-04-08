@@ -155,14 +155,9 @@ export function setupMessagesTools(server: McpServer, apiClient: WhatsAppApiClie
           type: params.media_type,
           [params.media_type]: {
             link: params.media_url,
-            caption: params.caption
+            ...(params.caption ? { caption: params.caption } : {})
           }
         };
-        
-        // Remove caption if not provided
-        if (!params.caption) {
-          delete payload[params.media_type].caption;
-        }
         
         const response = await apiClient.post(
           `${apiClient.getPhoneNumberEndpoint()}/messages`,
