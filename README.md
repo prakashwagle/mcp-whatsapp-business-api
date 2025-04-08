@@ -2,20 +2,53 @@
 
 A Node.js-based Model Context Protocol (MCP) Server implementation that provides a standardized interface for MCP clients to interact with the WhatsApp Business API
 
-## Features
+Features
+The server exposes the following WhatsApp Cloud API endpoints:
 
-- Business Profile Management
-- Message Sending and Receiving
-- Phone Number Management
-- Two-Step Verification
-- Registration Management
+Business Profiles
 
-## Prerequisites
+Get business profile information
+Update business profile information
 
-- Node.js (v16 or higher)
-- npm or yarn
-- WhatsApp Business API Account
-- Model Context Protocol sdk
+
+Registration
+
+Register a phone number
+Deregister a phone number
+Verify a phone number
+Check registration status
+
+
+Messages
+
+Send text messages
+Send template messages
+Send media messages (images, audio, documents, video, stickers)
+Mark messages as read
+List message templates
+
+
+Phone Numbers
+
+Get all phone numbers
+Get phone number details
+Request verification code
+
+
+Two-Step Verification
+
+Enable two-step verification
+Disable two-step verification
+
+
+
+Prerequisites
+
+Node.js (v16 or higher)
+npm or yarn
+A WhatsApp Business Account
+A registered phone number for WhatsApp Business API
+Access token for the WhatsApp Cloud API
 
 ## Installation
 

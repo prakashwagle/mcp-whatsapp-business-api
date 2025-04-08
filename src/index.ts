@@ -1,18 +1,24 @@
-import express from 'express';
+// src/index.ts
 import dotenv from 'dotenv';
+import { startMcpServer } from './server.js';
+import { loadConfig } from './utils/config.js';
 
 // Load environment variables
 dotenv.config();
 
-const app = express();
-const port = process.env.PORT || 3000;
+async function main() {
+  try {
+    // Load configuration
+    const config = loadConfig();
+    
+    // Start the MCP server with Express
+    await startMcpServer(config);
+    
+    console.log('MCP WhatsApp API server started successfully');
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
 
-// Health check endpoint
-app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'ok' });
-});
-
-// Main entry point for WhatsApp Business API MCP
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-}); 
+main();
