@@ -1,59 +1,71 @@
-import axios, { AxiosInstance } from 'axios';
-import { config } from '../config';
-import { logger } from './logger';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+import config from '../config';
 
-export class HttpClient {
+class HttpClient {
   private client: AxiosInstance;
-
+  private samplingRate: number = 0.5; // 50% sampling rate
+  
   constructor() {
+    // Create Axios instance with default configuration
     this.client = axios.create({
-      baseURL: config.whatsapp.apiUrl,
+      baseURL: `${config.whatsapp.apiBaseUrl}/${config.whatsapp.apiVersion}`,
       headers: {
-        'Authorization': `Bearer ${config.whatsapp.apiToken}`,
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${config.whatsapp.accessToken}`,
       },
+      timeout: 30000, // 30 seconds timeout
     });
-
-    this.client.interceptors.request.use(
-      (config) => {
-        logger.debug(`Making request to ${config.url}`);
-        return config;
-      },
-      (error) => {
-        logger.error('Request error:', error);
-        return Promise.reject(error);
+    
+    // Add request interceptor for logging
+    this.client.interceptors.request.use((config) => {
+      if (this.shouldSampleLog()) {
+        console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
       }
-    );
-
+      return config;
+    });
+    
+    // Add response interceptor for logging
     this.client.interceptors.response.use(
       (response) => {
-        logger.debug(`Received response from ${response.config.url}`);
+        console.log(`[API Response] ${response.status} ${response.config.method?.toUpperCase()} ${response.config.url}`);
         return response;
       },
       (error) => {
-        logger.error('Response error:', error.response?.data || error.message);
+        console.error('[API Error]', error.response?.data || error.message);
         return Promise.reject(error);
       }
     );
   }
-
-  async get<T>(url: string, params?: any): Promise<T> {
-    const response = await this.client.get<T>(url, { params });
-    return response.data;
+  
+  // GET request
+  async get<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    return this.client.get<T>(url, config);
+  }
+  
+  // POST request
+  async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    return this.client.post<T>(url, data, config);
+  }
+  
+  // PUT request
+  async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    return this.client.put<T>(url, data, config);
+  }
+  
+  // DELETE request
+  async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    return this.client.delete<T>(url, config);
+  }
+  
+  // PATCH request
+  async patch<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    return this.client.patch<T>(url, data, config);
   }
 
-  async post<T>(url: string, data?: any): Promise<T> {
-    const response = await this.client.post<T>(url, data);
-    return response.data;
+  private shouldSampleLog(): boolean {
+    return Math.random() < this.samplingRate;
   }
+}
 
-  async put<T>(url: string, data?: any): Promise<T> {
-    const response = await this.client.put<T>(url, data);
-    return response.data;
-  }
-
-  async delete<T>(url: string): Promise<T> {
-    const response = await this.client.delete<T>(url);
-    return response.data;
-  }
-} 
+// Export a singleton instance
+export default new HttpClient();

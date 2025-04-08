@@ -1,35 +1,21 @@
-import { Request, Response, NextFunction } from 'express';
-import { WhatsAppService } from '../services/whatsappService';
-import { AppError } from '../middleware/errorHandler';
-import { logger } from '../utils/logger';
+import { Request, Response } from 'express';
+import whatsappService from '../services/whatsappService';
+import logger from '../utils/logger';
 
-const whatsappService = new WhatsAppService();
-
-export const getPhoneNumbers = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getPhoneNumbers = async (req: Request, res: Response) => {
   try {
     const phoneNumbers = await whatsappService.getPhoneNumbers();
-    res.json(phoneNumbers);
-  } catch (error) {
-    logger.error('Error getting phone numbers:', error);
-    next(new AppError(500, 'Failed to get phone numbers'));
+    
+    return res.status(200).json({
+      success: true,
+      data: phoneNumbers
+    });
+  } catch (error: any) {
+    logger.error('Error getting phone numbers', { error: error.message });
+    
+    return res.status(error.response?.status || 500).json({
+      success: false,
+      error: error.response?.data?.error || error.message
+    });
   }
 };
-
-export const getPhoneNumberDetails = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { phoneNumberId } = req.params;
-    // Implementation will be added later
-    res.json({ id: phoneNumberId, status: 'active' });
-  } catch (error) {
-    logger.error('Error getting phone number details:', error);
-    next(new AppError(500, 'Failed to get phone number details'));
-  }
-}; 

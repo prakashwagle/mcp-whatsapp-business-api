@@ -1,36 +1,48 @@
-import { Request, Response, NextFunction } from 'express';
-import { WhatsAppService } from '../services/whatsappService';
-import { BusinessProfileUpdate } from '../models/businessProfile';
-import { AppError } from '../middleware/errorHandler';
-import { logger } from '../utils/logger';
+import { Request, Response } from 'express';
+import whatsappService from '../services/whatsappService';
+import logger from '../utils/logger';
 
-const whatsappService = new WhatsAppService();
-
-export const getBusinessProfile = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const getBusinessProfile = async (req: Request, res: Response) => {
   try {
-    const profile = await whatsappService.getBusinessProfile();
-    res.json(profile);
-  } catch (error) {
-    logger.error('Error getting business profile:', error);
-    next(new AppError(500, 'Failed to get business profile'));
+    const businessProfile = await whatsappService.getBusinessProfile();
+    
+    return res.status(200).json({
+      success: true,
+      data: businessProfile
+    });
+  } catch (error: any) {
+    logger.error('Error getting business profile', { error: error.message });
+    
+    return res.status(error.response?.status || 500).json({
+      success: false,
+      error: error.response?.data?.error || error.message
+    });
   }
 };
 
-export const updateBusinessProfile = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const updateBusinessProfile = async (req: Request, res: Response) => {
   try {
-    const update: BusinessProfileUpdate = req.body;
-    const profile = await whatsappService.updateBusinessProfile(update);
-    res.json(profile);
-  } catch (error) {
-    logger.error('Error updating business profile:', error);
-    next(new AppError(500, 'Failed to update business profile'));
+    const { about, address, description, email, websites, vertical } = req.body;
+    
+    const updatedProfile = await whatsappService.updateBusinessProfile({
+      about,
+      address,
+      description,
+      email,
+      websites,
+      vertical
+    });
+    
+    return res.status(200).json({
+      success: true,
+      data: updatedProfile
+    });
+  } catch (error: any) {
+    logger.error('Error updating business profile', { error: error.message });
+    
+    return res.status(error.response?.status || 500).json({
+      success: false,
+      error: error.response?.data?.error || error.message
+    });
   }
-}; 
+};

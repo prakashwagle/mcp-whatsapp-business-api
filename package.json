@@ -2,7 +2,7 @@
   "name": "whatsapp-business-api-mcp",
   "version": "1.0.0",
   "description": "WhatsApp Business API MCP Integration",
- "main": "dist/server.js",
+  "main": "dist/server.js",
   "scripts": {
     "start": "node dist/server.js",
     "dev": "nodemon src/server.ts",
