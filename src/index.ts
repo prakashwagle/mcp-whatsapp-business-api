@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // src/index.ts
 import dotenv from 'dotenv';
 import { startMcpServer } from './server.js';
