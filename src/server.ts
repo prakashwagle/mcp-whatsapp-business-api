@@ -1,6 +1,7 @@
 // src/server.ts
+import express, { Request, Response } from 'express';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { Config } from './utils/config.js';
 import { WhatsAppApiClient } from './utils/api-client.js';
 
@@ -43,13 +44,50 @@ export async function startMcpServer(config: Config) {
   // Setup prompts
   setupWhatsAppPrompts(server);
   
-  // Create a stdio transport (handles stdin/stdout communication)
-  const transport = new StdioServerTransport();
+  // Create Express app
+  const app = express();
   
-  // Connect the server to the transport
-  await server.connect(transport);
+  // To support multiple simultaneous connections we have a lookup object from
+  // sessionId to transport
+  const transports: {[sessionId: string]: SSEServerTransport} = {};
   
-  console.error(`MCP server started using stdio transport`);
+  // Set up SSE endpoint
+  app.get("/mcp/sse", async (_: Request, res: Response) => {
+    const transport = new SSEServerTransport('/mcp/messages', res);
+    transports[transport.sessionId] = transport;
+    
+    res.on("close", () => {
+      delete transports[transport.sessionId];
+      console.log(`Connection closed for session ${transport.sessionId}`);
+    });
+    
+    await server.connect(transport);
+    console.log(`New SSE connection established with session ID: ${transport.sessionId}`);
+  });
   
-  return server;
+  // Set up messages endpoint
+  app.post("/mcp/messages", async (req: Request, res: Response) => {
+    const sessionId = req.query.sessionId as string;
+    const transport = transports[sessionId];
+    
+    if (transport) {
+      await transport.handlePostMessage(req, res);
+    } else {
+      res.status(400).send('No transport found for sessionId');
+    }
+  });
+  
+  // Add health check endpoint
+  app.get("/health", (_: Request, res: Response) => {
+    res.status(200).json({ status: "ok" });
+  });
+  
+  // Start the server
+  const httpServer = app.listen(config.serverPort, () => {
+    console.log(`MCP server started on port ${config.serverPort}`);
+    console.log(`SSE endpoint available at http://localhost:${config.serverPort}/mcp/sse`);
+    console.log(`Messages endpoint available at http://localhost:${config.serverPort}/mcp/messages`);
+  });
+  
+  return { server, app, httpServer };
 }
