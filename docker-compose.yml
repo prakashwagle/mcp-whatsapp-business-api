@@ -1,23 +1,33 @@
 version: '3.8'
 
 services:
-  whatsapp-business-api-mcp:
+  whatsapp-api:
     build:
       context: .
-      dockerfile: Dockerfile
+      target: ${TARGET:-builder}  # Default to builder for development
+    image: whatsapp-mcp:${TAG:-dev}
+    container_name: whatsapp-mcp
     ports:
-      - "3000:3000"
+      - "${PORT:-3000}:3000"
     environment:
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT=3000
-      - NODE_ENV=development
-      - WHATSAPP_API_VERSION=${WHATSAPP_API_VERSION}
-      - WHATSAPP_API_BASE_URL=${WHATSAPP_API_BASE_URL}
-      - WHATSAPP_PHONE_NUMBER_ID=${WHATSAPP_PHONE_NUMBER_ID}
-      - WHATSAPP_BUSINESS_ACCOUNT_ID=${WHATSAPP_BUSINESS_ACCOUNT_ID}
-      - WHATSAPP_ACCESS_TOKEN=${WHATSAPP_ACCESS_TOKEN}
-      - MCP_SERVER_NAME=${MCP_SERVER_NAME}
-      - MCP_SERVER_VERSION=${MCP_SERVER_VERSION}
-      - MCP_SERVER_BASE_URL=${MCP_SERVER_BASE_URL}
+      # Add other environment variables as needed
     volumes:
-      - ./logs:/app/logs
+      - .:/app
+      - /app/node_modules
+      - /app/dist
+    command: ${COMMAND:-npm run dev}  # Default to dev for development
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
     restart: unless-stopped
+    networks:
+      - whatsapp-network
+
+networks:
+  whatsapp-network:
+    driver: bridge 
