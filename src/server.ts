@@ -17,6 +17,7 @@ import { setupDatabaseTools } from './api/database.js';
 // Import resources
 import { setupBusinessProfileResource } from './api/resources/business-profile.js';
 import { setupTemplateCatalogsResource } from './api/resources/template-catalogs.js';
+import { setupPhoneNumberResources } from './api/resources/phone-numbers.js';
 import { setupDatabaseResources } from './api/resources/database.js';
 
 // Import prompts
@@ -64,6 +65,7 @@ export async function startMcpServer(config: Config) {
   // Setup resources
   setupBusinessProfileResource(server, apiClient);
   setupTemplateCatalogsResource(server, apiClient);
+  setupPhoneNumberResources(server, apiClient);
 
   // Setup database resources if database is available
   if (dbClient) {
