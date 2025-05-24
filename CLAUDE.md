@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Build: `npm run build`
 - Start production: `npm run start`
 - Development: `npm run dev`
+- Lint: `npm run lint`
+- Lint fix: `npm run lint:fix`
+- Format: `npm run format`
+- Format check: `npm run format:check`
 - Test: Need to implement Jest tests (currently placeholder in package.json)
 - Run single test: `npx jest path/to/test-file.test.ts`
 - MCP Integration: 

@@ -65,13 +65,23 @@ npm install
 
 3. Create a `.env` file in the root directory and configure your environment variables:
 ```env
-PORT=3000
+# Server Configuration
+SERVER_PORT=3000
 NODE_ENV=development
-WHATSAPP_API_URL=https://graph.facebook.com/v21.0
-WHATSAPP_API_TOKEN=your_api_token_here
+
+# WhatsApp API Configuration
+WHATSAPP_API_VERSION=v21.0
+WHATSAPP_ACCESS_TOKEN=your_api_token_here
 WHATSAPP_PHONE_NUMBER_ID=your_phone_number_id_here
 WHATSAPP_BUSINESS_ACCOUNT_ID=your_business_account_id_here
-JWT_SECRET=your_jwt_secret_here
+
+# Database Configuration (Optional)
+DATABASE_HOST=your_postgres_host
+DATABASE_PORT=5432
+DATABASE_NAME=your_database_name
+DATABASE_USERNAME=your_username
+DATABASE_PASSWORD=your_password
+DATABASE_SSL=true
 ```
 
 ## Development

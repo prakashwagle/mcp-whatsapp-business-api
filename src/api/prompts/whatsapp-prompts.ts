@@ -5,11 +5,11 @@ import { z } from 'zod';
 export function setupWhatsAppPrompts(server: McpServer) {
   // Prompt for business profile help
   server.prompt(
-    "help_with_business_profile",
+    'help_with_business_profile',
     {
-      action: z.enum(['view', 'update'])
+      action: z.enum(['view', 'update']),
     },
-    (params) => {
+    params => {
       if (params.action === 'view') {
         return {
           messages: [
@@ -17,8 +17,8 @@ export function setupWhatsAppPrompts(server: McpServer) {
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I view my WhatsApp Business profile information?`
-              }
+                text: `How can I view my WhatsApp Business profile information?`,
+              },
             },
             {
               role: 'assistant',
@@ -34,10 +34,10 @@ Tool name: whatsapp_get_business_profile
 Input: {}
 \`\`\`
 
-This will return the complete business profile information in JSON format.`
-              }
-            }
-          ]
+This will return the complete business profile information in JSON format.`,
+              },
+            },
+          ],
         };
       } else {
         return {
@@ -46,8 +46,8 @@ This will return the complete business profile information in JSON format.`
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I update my WhatsApp Business profile information?`
-              }
+                text: `How can I update my WhatsApp Business profile information?`,
+              },
             },
             {
               role: 'assistant',
@@ -88,25 +88,25 @@ The possible vertical values include:
 - RESTAURANT
 - OTHER
 
-You only need to include the fields you want to update.`
-              }
-            }
-          ]
+You only need to include the fields you want to update.`,
+              },
+            },
+          ],
         };
       }
     }
   );
-  
+
   // Prompt for messaging help
   server.prompt(
-    "help_with_messaging",
+    'help_with_messaging',
     {
       messageType: z.enum(['text', 'template', 'media']),
-      recipient: z.string().optional()
+      recipient: z.string().optional(),
     },
-    (params) => {
-      const recipient = params.recipient || "a customer";
-      
+    params => {
+      const recipient = params.recipient || 'a customer';
+
       if (params.messageType === 'text') {
         return {
           messages: [
@@ -114,8 +114,8 @@ You only need to include the fields you want to update.`
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I send a text message to ${recipient}?`
-              }
+                text: `How can I send a text message to ${recipient}?`,
+              },
             },
             {
               role: 'assistant',
@@ -127,7 +127,7 @@ Example:
 \`\`\`
 Tool name: whatsapp_send_text_message
 Input: {
-  "to": "${params.recipient || "1234567890"}",
+  "to": "${params.recipient || '1234567890'}",
   "message": "Hello from our business!",
   "preview_url": true
 }
@@ -140,10 +140,10 @@ Important notes:
 2. For business-initiated conversations, you can only message users who have either:
    - Messaged you in the last 24 hours
    - Opted in to receive messages from your business
-3. Otherwise, you must use a template message`
-              }
-            }
-          ]
+3. Otherwise, you must use a template message`,
+              },
+            },
+          ],
         };
       } else if (params.messageType === 'template') {
         return {
@@ -152,8 +152,8 @@ Important notes:
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I send a template message to ${recipient}?`
-              }
+                text: `How can I send a template message to ${recipient}?`,
+              },
             },
             {
               role: 'assistant',
@@ -165,7 +165,7 @@ Example:
 \`\`\`
 Tool name: whatsapp_send_template_message
 Input: {
-  "to": "${params.recipient || "1234567890"}",
+  "to": "${params.recipient || '1234567890'}",
   "template_name": "hello_world",
   "language_code": "en_US",
   "components": [
@@ -188,10 +188,10 @@ Important notes:
 1. The template must be pre-approved by WhatsApp
 2. The components parameter allows you to customize the dynamic parts of the template
 3. Template messages can be sent to users even if they haven't messaged you in the last 24 hours
-4. Templates are subject to quality ratings and may be rejected if they have high block rates`
-              }
-            }
-          ]
+4. Templates are subject to quality ratings and may be rejected if they have high block rates`,
+              },
+            },
+          ],
         };
       } else {
         return {
@@ -200,8 +200,8 @@ Important notes:
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I send a media message to ${recipient}?`
-              }
+                text: `How can I send a media message to ${recipient}?`,
+              },
             },
             {
               role: 'assistant',
@@ -213,7 +213,7 @@ Example:
 \`\`\`
 Tool name: whatsapp_send_media_message
 Input: {
-  "to": "${params.recipient || "1234567890"}",
+  "to": "${params.recipient || '1234567890'}",
   "media_type": "image",
   "media_url": "https://example.com/image.jpg",
   "caption": "Check out this image!"
@@ -235,22 +235,22 @@ Important notes:
    - Images: 5MB
    - Audio: 16MB
    - Video: 16MB
-   - Documents: 100MB`
-              }
-            }
-          ]
+   - Documents: 100MB`,
+              },
+            },
+          ],
         };
       }
     }
   );
-  
+
   // Prompt for registration help
   server.prompt(
-    "help_with_registration",
+    'help_with_registration',
     {
-      action: z.enum(['register', 'deregister', 'verify'])
+      action: z.enum(['register', 'deregister', 'verify']),
     },
-    (params) => {
+    params => {
       if (params.action === 'register') {
         return {
           messages: [
@@ -258,8 +258,8 @@ Important notes:
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I register a phone number with WhatsApp Business API?`
-              }
+                text: `How can I register a phone number with WhatsApp Business API?`,
+              },
             },
             {
               role: 'assistant',
@@ -284,10 +284,10 @@ You can check the registration status using the \`whatsapp_check_registration_st
 
 Important notes:
 - If you're using a number that was previously used with WhatsApp or WhatsApp Business app, you need to delete that account first
-- Once a number is registered with the WhatsApp Business API, it cannot be used with the regular WhatsApp or WhatsApp Business apps`
-              }
-            }
-          ]
+- Once a number is registered with the WhatsApp Business API, it cannot be used with the regular WhatsApp or WhatsApp Business apps`,
+              },
+            },
+          ],
         };
       } else if (params.action === 'deregister') {
         return {
@@ -296,8 +296,8 @@ Important notes:
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I deregister a phone number from WhatsApp Business API?`
-              }
+                text: `How can I deregister a phone number from WhatsApp Business API?`,
+              },
             },
             {
               role: 'assistant',
@@ -315,10 +315,10 @@ Important notes:
 1. Deregistering a phone number is irreversible
 2. After deregistering, you'll need to go through the registration process again if you want to use this phone number with WhatsApp Business API
 3. Any conversations, message history, and settings associated with this number will be lost
-4. After deregistration, there may be a cooling period before the number can be registered again`
-              }
-            }
-          ]
+4. After deregistration, there may be a cooling period before the number can be registered again`,
+              },
+            },
+          ],
         };
       } else {
         return {
@@ -327,8 +327,8 @@ Important notes:
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I verify a phone number with WhatsApp Business API?`
-              }
+                text: `How can I verify a phone number with WhatsApp Business API?`,
+              },
             },
             {
               role: 'assistant',
@@ -358,22 +358,22 @@ The verification process:
 2. Receive the code on the phone number you're verifying
 3. Submit the code to complete verification
 
-You can check the verification status using the \`whatsapp_check_registration_status\` tool.`
-              }
-            }
-          ]
+You can check the verification status using the \`whatsapp_check_registration_status\` tool.`,
+              },
+            },
+          ],
         };
       }
     }
   );
-  
+
   // Prompt for two-step verification help
   server.prompt(
-    "help_with_two_step_verification",
+    'help_with_two_step_verification',
     {
-      action: z.enum(['enable', 'disable'])
+      action: z.enum(['enable', 'disable']),
     },
-    (params) => {
+    params => {
       if (params.action === 'enable') {
         return {
           messages: [
@@ -381,8 +381,8 @@ You can check the verification status using the \`whatsapp_check_registration_st
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I enable two-step verification for my WhatsApp Business API account?`
-              }
+                text: `How can I enable two-step verification for my WhatsApp Business API account?`,
+              },
             },
             {
               role: 'assistant',
@@ -403,10 +403,10 @@ Important notes:
 2. This PIN will be required when registering your phone number with WhatsApp Business API
 3. Two-step verification adds an extra layer of security to your account
 4. Keep your PIN secure and don't share it with others
-5. You may need to have two-factor authentication enabled on your Facebook account as well`
-              }
-            }
-          ]
+5. You may need to have two-factor authentication enabled on your Facebook account as well`,
+              },
+            },
+          ],
         };
       } else {
         return {
@@ -415,8 +415,8 @@ Important notes:
               role: 'user',
               content: {
                 type: 'text',
-                text: `How can I disable two-step verification for my WhatsApp Business API account?`
-              }
+                text: `How can I disable two-step verification for my WhatsApp Business API account?`,
+              },
             },
             {
               role: 'assistant',
@@ -434,34 +434,31 @@ Important notes:
 1. Disabling two-step verification reduces the security of your account
 2. After disabling, you won't need to enter a PIN when re-registering your phone number
 3. It's generally recommended to keep two-step verification enabled for security
-4. If you're experiencing issues with two-step verification, consider changing your PIN instead of disabling it entirely`
-              }
-            }
-          ]
+4. If you're experiencing issues with two-step verification, consider changing your PIN instead of disabling it entirely`,
+              },
+            },
+          ],
         };
       }
     }
   );
-  
+
   // General help prompt for WhatsApp API
-  server.prompt(
-    "help_with_whatsapp_api",
-    {},
-    () => {
-      return {
-        messages: [
-          {
-            role: 'user',
-            content: {
-              type: 'text',
-              text: `What can I do with the WhatsApp Cloud Business API?`
-            }
+  server.prompt('help_with_whatsapp_api', {}, () => {
+    return {
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `What can I do with the WhatsApp Cloud Business API?`,
           },
-          {
-            role: 'assistant',
-            content: {
-              type: 'text',
-              text: `The WhatsApp Cloud Business API offers several capabilities:
+        },
+        {
+          role: 'assistant',
+          content: {
+            type: 'text',
+            text: `The WhatsApp Cloud Business API offers several capabilities:
 
 **Business Profile Management**
 - View your business profile information
@@ -495,11 +492,10 @@ To get specific help with any of these areas, you can use one of the following p
 
 You can also browse the resources available:
 - whatsapp://business_profile
-- whatsapp://templates`
-            }
-          }
-        ]
-      };
-    }
-  );
+- whatsapp://templates`,
+          },
+        },
+      ],
+    };
+  });
 }

@@ -29,15 +29,17 @@ RUN npm ci --only=production
 # Copy built files from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Copy environment file
-COPY .env.example .env
-
 # Expose the port the app runs on
 EXPOSE 3000
 
 # Set environment variables
 ENV NODE_ENV=production
-ENV PORT=3000
+ENV SERVER_PORT=3000
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+USER nodejs
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
