@@ -11,10 +11,10 @@ async function main() {
   try {
     // Load configuration
     const config = loadConfig();
-    
+
     // Start the MCP server with stdio transport
     await startMcpServer(config);
-    
+
     // Note: Don't use console.log as it will interfere with the stdio transport
     // Use console.error instead for logging as it goes to stderr instead of stdout
     console.error('MCP WhatsApp API server started successfully');
