@@ -484,15 +484,83 @@ Important notes:
 - List available message templates
 - Use templates for outbound messaging
 
+**Analytics & Insights**
+- View messaging analytics (sent/delivered)
+- Monitor conversation metrics and costs
+- Analyze template performance
+- Get business analytics summary
+
 To get specific help with any of these areas, you can use one of the following prompts:
 - help_with_business_profile
 - help_with_messaging
 - help_with_registration
 - help_with_two_step_verification
+- help_with_analytics
 
 You can also browse the resources available:
 - whatsapp://business_profile
-- whatsapp://templates`,
+- whatsapp://templates
+- whatsapp://analytics/summary`,
+          },
+        },
+      ],
+    };
+  });
+
+  // Prompt for analytics help
+  server.prompt('help_with_analytics', {}, () => {
+    return {
+      messages: [
+        {
+          role: 'user',
+          content: {
+            type: 'text',
+            text: `How can I view analytics and insights for my WhatsApp Business account?`,
+          },
+        },
+        {
+          role: 'assistant',
+          content: {
+            type: 'text',
+            text: `WhatsApp Business provides comprehensive analytics to help you understand your messaging performance. Here are the available analytics resources:
+
+## 📊 Analytics Resources
+
+**📈 Messaging Analytics**
+- Resource: \`whatsapp://analytics/messaging\`
+- Shows: Messages sent and delivered over the last 30 days
+- Includes: Daily breakdowns and delivery rates
+
+**💬 Conversation Analytics**
+- Resource: \`whatsapp://analytics/conversations\`
+- Shows: Conversation counts and costs over the last 30 days
+- Includes: Daily costs and average cost per conversation
+
+**📋 Template Analytics**
+- Resource: \`whatsapp://analytics/templates\`
+- Shows: Template performance metrics (sent, delivered, read, clicks)
+- Includes: Delivery rates, read rates, and click-through rates
+
+**📋 Analytics Summary**
+- Resource: \`whatsapp://analytics/summary\`
+- Shows: Quick overview of all metrics for the last 7 days
+- Perfect for daily business reviews
+
+## 🔍 What You Can Learn
+
+- **Performance**: How many messages are being delivered successfully
+- **Engagement**: How many recipients are reading and interacting with your messages
+- **Costs**: How much you're spending on conversations
+- **Template Effectiveness**: Which message templates perform best
+
+## 💡 Tips
+
+1. Check analytics regularly to optimize your messaging strategy
+2. Monitor delivery rates to ensure message quality
+3. Use template analytics to improve message content
+4. Track conversation costs for budget planning
+
+Simply browse any of the analytics resources above to get started with your business insights!`,
           },
         },
       ],

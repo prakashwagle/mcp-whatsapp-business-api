@@ -2,7 +2,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { WhatsAppApiClient } from '../utils/api-client.js';
-import { rateLimiter } from '../utils/rate-limiter.js';
 
 // Define schema for sending a text message
 const SendTextMessageSchema = z.object({
@@ -107,22 +106,19 @@ export function setupMessagesTools(
     SendTemplateMessageSchema.shape,
     async params => {
       try {
-        const response = await apiClient.sendMessage(
-          {
-            messaging_product: 'whatsapp',
-            recipient_type: 'individual',
-            to: params.to,
-            type: 'template',
-            template: {
-              name: params.template_name,
-              language: {
-                code: params.language_code,
-              },
-              components: params.components || [],
+        const response = await apiClient.sendMessage({
+          messaging_product: 'whatsapp',
+          recipient_type: 'individual',
+          to: params.to,
+          type: 'template',
+          template: {
+            name: params.template_name,
+            language: {
+              code: params.language_code,
             },
+            components: params.components || [],
           },
-          true
-        );
+        });
 
         return {
           content: [
@@ -250,38 +246,4 @@ export function setupMessagesTools(
       };
     }
   });
-
-  // Tool: Get Rate Limit Status
-  server.tool(
-    'whatsapp_get_rate_limit_status',
-    {
-      phone_number_id: z.string().optional(),
-    },
-    async params => {
-      try {
-        const phoneNumberId =
-          params.phone_number_id ||
-          apiClient.getPhoneNumberEndpoint().substring(1);
-        const status = await rateLimiter.getRateLimitStatus(phoneNumberId);
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Rate limit status:\n${JSON.stringify(status, null, 2)}`,
-            },
-          ],
-        };
-      } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error getting rate limit status: ${error.message}`,
-            },
-          ],
-        };
-      }
-    }
-  );
 }

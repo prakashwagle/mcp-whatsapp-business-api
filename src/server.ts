@@ -19,6 +19,7 @@ import { setupBusinessProfileResource } from './api/resources/business-profile.j
 import { setupTemplateCatalogsResource } from './api/resources/template-catalogs.js';
 import { setupPhoneNumberResources } from './api/resources/phone-numbers.js';
 import { setupDatabaseResources } from './api/resources/database.js';
+import { setupAnalyticsResources } from './api/resources/analytics.js';
 
 // Import prompts
 import { setupWhatsAppPrompts } from './api/prompts/whatsapp-prompts.js';
@@ -67,6 +68,7 @@ export async function startMcpServer(config: Config) {
   setupBusinessProfileResource(server, apiClient);
   setupTemplateCatalogsResource(server, apiClient);
   setupPhoneNumberResources(server, apiClient);
+  setupAnalyticsResources(server, apiClient);
 
   // Setup database resources if database is available
   if (dbClient) {
@@ -154,12 +156,12 @@ export async function startMcpServer(config: Config) {
   });
 
   // Add webhook receiver endpoint (POST)
-  app.post('/webhook', (req: Request, res: Response) => {
+  app.post('/webhook', async (req: Request, res: Response) => {
     const body = req.body;
 
     console.log('Webhook received:', JSON.stringify(body, null, 2));
 
-    // Process incoming webhook data
+    // Process incoming webhook data (simplified - no rate limiting on WhatsApp APIs)
     if (body.object === 'whatsapp_business_account') {
       body.entry?.forEach((entry: any) => {
         entry.changes?.forEach((change: any) => {
