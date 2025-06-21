@@ -22,6 +22,7 @@ import { setupDatabaseResources } from './api/resources/database.js';
 
 // Import prompts
 import { setupWhatsAppPrompts } from './api/prompts/whatsapp-prompts.js';
+import { eventEmitter } from './utils/event-emitter.js';
 
 export async function startMcpServer(config: Config) {
   // Create the WhatsApp API client
@@ -78,9 +79,30 @@ export async function startMcpServer(config: Config) {
   // Create Express app
   const app = express();
 
+  // Add JSON parsing middleware
+  app.use(express.json());
+
   // To support multiple simultaneous connections we have a lookup object from
   // sessionId to transport
   const transports: { [sessionId: string]: SSEServerTransport } = {};
+
+  // Set up event broadcasting to all connected SSE clients
+  eventEmitter.on('whatsapp_event', event => {
+    const eventData = JSON.stringify(event);
+
+    // Broadcast to all connected transports
+    Object.values(transports).forEach(transport => {
+      try {
+        // Send event as SSE data via the response object
+        const res = (transport as any).response;
+        if (res && !res.destroyed) {
+          res.write(`data: ${eventData}\n\n`);
+        }
+      } catch (error) {
+        console.error('Error broadcasting event to transport:', error);
+      }
+    });
+  });
 
   // Set up SSE endpoint
   app.get('/mcp/sse', async (_: Request, res: Response) => {
@@ -113,6 +135,84 @@ export async function startMcpServer(config: Config) {
   // Add health check endpoint
   app.get('/health', (_: Request, res: Response) => {
     res.status(200).json({ status: 'ok' });
+  });
+
+  // Add webhook verification endpoint (GET)
+  app.get('/webhook', (req: Request, res: Response) => {
+    const mode = req.query['hub.mode'];
+    const token = req.query['hub.verify_token'];
+    const challenge = req.query['hub.challenge'];
+
+    // Verify the webhook token
+    if (mode === 'subscribe' && token === process.env.WEBHOOK_VERIFY_TOKEN) {
+      console.log('Webhook verified successfully');
+      res.status(200).send(challenge);
+    } else {
+      console.error('Failed to verify webhook');
+      res.status(403).send('Forbidden');
+    }
+  });
+
+  // Add webhook receiver endpoint (POST)
+  app.post('/webhook', (req: Request, res: Response) => {
+    const body = req.body;
+
+    console.log('Webhook received:', JSON.stringify(body, null, 2));
+
+    // Process incoming webhook data
+    if (body.object === 'whatsapp_business_account') {
+      body.entry?.forEach((entry: any) => {
+        entry.changes?.forEach((change: any) => {
+          if (change.field === 'messages') {
+            const value = change.value;
+
+            // Handle incoming messages
+            if (value.messages) {
+              value.messages.forEach((message: any) => {
+                eventEmitter.emitWhatsAppEvent({
+                  type: 'message_received',
+                  timestamp: new Date(),
+                  data: {
+                    messageId: message.id,
+                    from: message.from,
+                    timestamp: message.timestamp,
+                    type: message.type,
+                    content:
+                      message.text ||
+                      message.image ||
+                      message.audio ||
+                      message.document ||
+                      message.video ||
+                      message.sticker ||
+                      message,
+                    phoneNumberId: value.metadata?.phone_number_id,
+                  },
+                });
+              });
+            }
+
+            // Handle message status updates
+            if (value.statuses) {
+              value.statuses.forEach((status: any) => {
+                eventEmitter.emitWhatsAppEvent({
+                  type: 'message_status_update',
+                  timestamp: new Date(),
+                  data: {
+                    messageId: status.id,
+                    status: status.status,
+                    timestamp: status.timestamp,
+                    recipientId: status.recipient_id,
+                    phoneNumberId: value.metadata?.phone_number_id,
+                  },
+                });
+              });
+            }
+          }
+        });
+      });
+    }
+
+    res.status(200).send('OK');
   });
 
   // Start the server
