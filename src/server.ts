@@ -207,7 +207,7 @@ export async function startMcpServerStdio(config: Config) {
   return { server, transport };
 }
 
-// HTTP/SSE transport mode (for webhooks and web interface)
+// HTTP transport mode (for modern MCP clients and webhooks)
 export async function startMcpServer(config: Config) {
   // Create database client if configuration is provided
   let dbClient: DatabaseClient | null = null;
@@ -234,7 +234,7 @@ export async function startMcpServer(config: Config) {
   app.use(express.json());
 
   // To support multiple simultaneous connections we have a lookup object from
-  // sessionId to transport
+  // sessionId to transport (keeping SSE for backward compatibility)
   const transports: { [sessionId: string]: SSEServerTransport } = {};
 
   // Set up event broadcasting to all connected SSE clients
@@ -255,7 +255,26 @@ export async function startMcpServer(config: Config) {
     });
   });
 
-  // Set up SSE endpoint
+  // Modern HTTP endpoint for MCP (preferred)
+  app.post('/mcp', express.json(), async (req: Request, res: Response) => {
+    try {
+      // Create a new transport for each request (stateless HTTP)
+      const transport = new SSEServerTransport('/mcp', res);
+      
+      // Connect the server to this transport
+      await server.connect(transport);
+      
+      // Handle the request through the transport
+      await transport.handlePostMessage(req, res);
+    } catch (error) {
+      console.error('Error handling MCP HTTP request:', error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    }
+  });
+
+  // Legacy SSE endpoint (for backward compatibility)
   app.get('/mcp/sse', async (_: Request, res: Response) => {
     const transport = new SSEServerTransport('/mcp/messages', res);
     transports[transport.sessionId] = transport;
@@ -271,7 +290,7 @@ export async function startMcpServer(config: Config) {
     );
   });
 
-  // Set up messages endpoint
+  // Legacy messages endpoint
   app.post('/mcp/messages', async (req: Request, res: Response) => {
     const sessionId = req.query.sessionId as string;
     const transport = transports[sessionId];
@@ -370,10 +389,13 @@ export async function startMcpServer(config: Config) {
   const httpServer = app.listen(config.serverPort, () => {
     console.log(`MCP server started on port ${config.serverPort}`);
     console.log(
-      `SSE endpoint available at http://localhost:${config.serverPort}/mcp/sse`
+      `Modern HTTP endpoint: http://localhost:${config.serverPort}/mcp`
     );
     console.log(
-      `Messages endpoint available at http://localhost:${config.serverPort}/mcp/messages`
+      `Legacy SSE endpoint: http://localhost:${config.serverPort}/mcp/sse`
+    );
+    console.log(
+      `Health check: http://localhost:${config.serverPort}/health`
     );
   });
 
