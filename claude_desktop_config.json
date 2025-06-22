@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "whatsapp-business": {
+      "command": "node",
+      "args": ["/Users/prakashwagle/Documents/GitHub/mcp-whatsapp-business-api/dist/index.js"],
+      "env": {
+        "WHATSAPP_API_VERSION": "v21.0",
+        "WHATSAPP_ACCESS_TOKEN": "YOUR_ACCESS_TOKEN_HERE",
+        "WHATSAPP_PHONE_NUMBER_ID": "YOUR_PHONE_NUMBER_ID_HERE", 
+        "WHATSAPP_BUSINESS_ACCOUNT_ID": "YOUR_BUSINESS_ACCOUNT_ID_HERE",
+        "SERVER_PORT": "3000",
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
