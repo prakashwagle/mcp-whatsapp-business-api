@@ -1,15 +1,15 @@
 {
   "mcpServers": {
     "whatsapp-business": {
-      "command": "node",
-      "args": ["/Users/prakashwagle/Documents/GitHub/mcp-whatsapp-business-api/dist/index.js"],
+      "url": "http://localhost:3000/mcp/sse",
       "env": {
         "WHATSAPP_API_VERSION": "v21.0",
-        "WHATSAPP_ACCESS_TOKEN": "YOUR_ACCESS_TOKEN_HERE",
-        "WHATSAPP_PHONE_NUMBER_ID": "YOUR_PHONE_NUMBER_ID_HERE", 
-        "WHATSAPP_BUSINESS_ACCOUNT_ID": "YOUR_BUSINESS_ACCOUNT_ID_HERE",
+        "WHATSAPP_ACCESS_TOKEN": "your_actual_access_token",
+        "WHATSAPP_PHONE_NUMBER_ID": "your_actual_phone_number_id", 
+        "WHATSAPP_BUSINESS_ACCOUNT_ID": "your_actual_business_account_id",
         "SERVER_PORT": "3000",
-        "NODE_ENV": "production"
+        "NODE_ENV": "production",
+        "MCP_TRANSPORT_MODE": "sse"
       }
     }
   }
