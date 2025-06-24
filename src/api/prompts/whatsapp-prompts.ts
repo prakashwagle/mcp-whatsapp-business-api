@@ -443,6 +443,121 @@ Important notes:
     }
   );
 
+  // Smart messaging guidance prompt
+  server.prompt(
+    'smart_messaging_guidance',
+    {
+      messageContent: z.string(),
+      recipient: z.string().optional(),
+    },
+    params => {
+      const isPromotional = /\b(coupon|discount|sale|offer|promo|deal|savings|special|limited time|exclusive|free|% off|buy now|shop now|order now)\b/i.test(params.messageContent);
+      const isTransactional = /\b(order|receipt|confirmation|delivery|tracking|invoice|payment|appointment|booking|welcome|reset|verify)\b/i.test(params.messageContent);
+      
+      return {
+        messages: [
+          {
+            role: 'user',
+            content: {
+              type: 'text',
+              text: `I want to send this message: "${params.messageContent}". What's the best way to send it?`,
+            },
+          },
+          {
+            role: 'assistant',
+            content: {
+              type: 'text',
+              text: `Based on your message content, here's my recommendation:
+
+${isPromotional ? `🎯 **PROMOTIONAL MESSAGE DETECTED**
+
+Your message contains promotional content (offers, discounts, coupons, etc.). For the best delivery and compliance:
+
+**✅ RECOMMENDED: Use Template Message**
+
+1. First, list available templates: \`whatsapp_list_message_templates\`
+2. Look for promotional templates (e.g., "promotional_offer", "discount_coupon", "sale_announcement")
+3. Use \`whatsapp_send_template_message\` with appropriate parameters
+
+**Why templates for promotions?**
+- ✅ Can message users outside 24-hour window
+- ✅ Higher delivery rates for promotional content
+- ✅ WhatsApp compliance for marketing messages
+- ✅ Better performance tracking
+- ✅ Professional appearance
+
+**Example:**
+\`\`\`
+Tool: whatsapp_send_template_message
+Input: {
+  "to": "${params.recipient || 'customer_phone'}",
+  "template_name": "promotional_offer",
+  "language_code": "en_US",
+  "components": [
+    {
+      "type": "body", 
+      "parameters": [
+        {"type": "text", "text": "20% OFF"},
+        {"type": "text", "text": "SAVE20"}
+      ]
+    }
+  ]
+}
+\`\`\`
+` : ''}
+
+${isTransactional ? `📋 **TRANSACTIONAL MESSAGE DETECTED**
+
+Your message contains transactional content (orders, confirmations, appointments, etc.).
+
+**✅ RECOMMENDED: Use Template Message**
+
+Look for transactional templates like:
+- "order_confirmation"
+- "delivery_update" 
+- "appointment_reminder"
+- "payment_receipt"
+
+Transactional templates have:
+- ✅ Higher approval rates
+- ✅ Better delivery reliability
+- ✅ Can be sent anytime
+- ✅ Professional formatting
+` : ''}
+
+${!isPromotional && !isTransactional ? `💬 **CONVERSATIONAL MESSAGE DETECTED**
+
+Your message appears to be conversational or informational.
+
+**Options:**
+
+1. **If replying to customer (within 24 hours):** Use \`whatsapp_send_text_message\`
+2. **If business-initiated:** Use template message with "utility" category
+
+**Text Message (for replies):**
+\`\`\`
+Tool: whatsapp_send_text_message
+Input: {
+  "to": "${params.recipient || 'customer_phone'}",
+  "message": "${params.messageContent}",
+  "preview_url": true
+}
+\`\`\`
+` : ''}
+
+**💡 Pro Tips:**
+- Always check available templates first: \`whatsapp_list_message_templates\`
+- Browse template resource: \`whatsapp://templates\`
+- For marketing/promotional content: Templates are REQUIRED
+- For customer service replies: Text messages work within 24 hours
+- Templates have better analytics and performance tracking`,
+            },
+          },
+        ],
+      };
+    }
+  );
+
   // General help prompt for WhatsApp API
   server.prompt('help_with_whatsapp_api', {}, () => {
     return {
