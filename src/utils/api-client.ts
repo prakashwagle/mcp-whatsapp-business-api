@@ -1,7 +1,6 @@
 // WhatsApp API client utilities
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
 import { Config } from './config.js';
-import { rateLimiter } from './rate-limiter.js';
 import { eventEmitter } from './event-emitter.js';
 
 export class WhatsAppApiClient {
@@ -19,7 +18,7 @@ export class WhatsAppApiClient {
       },
     });
 
-    // Add request interceptor for logging and rate limiting
+    // Add request interceptor for logging
     this.client.interceptors.request.use(async request => {
       const startTime = Date.now();
       (request as any).metadata = { startTime };
@@ -64,63 +63,41 @@ export class WhatsAppApiClient {
   }
 
   async get(path: string, config?: AxiosRequestConfig) {
-    return rateLimiter.scheduleApiCall(
-      path,
-      () => this.client.get(path, config),
-      this.config.whatsappBusinessAccountId
-    );
+    return this.client.get(path, config);
   }
 
   async post(path: string, data: any, config?: AxiosRequestConfig) {
-    return rateLimiter.scheduleApiCall(
-      path,
-      () => this.client.post(path, data, config),
-      this.config.whatsappBusinessAccountId
-    );
+    return this.client.post(path, data, config);
   }
 
   async patch(path: string, data: any, config?: AxiosRequestConfig) {
-    return rateLimiter.scheduleApiCall(
-      path,
-      () => this.client.patch(path, data, config),
-      this.config.whatsappBusinessAccountId
-    );
+    return this.client.patch(path, data, config);
   }
 
   async delete(path: string, config?: AxiosRequestConfig) {
-    return rateLimiter.scheduleApiCall(
-      path,
-      () => this.client.delete(path, config),
-      this.config.whatsappBusinessAccountId
-    );
+    return this.client.delete(path, config);
   }
 
-  // Special method for sending messages with proper rate limiting
-  async sendMessage(data: any, isTemplate: boolean = false) {
+  // Special method for sending messages with event tracking
+  async sendMessage(data: any) {
     const path = `${this.getPhoneNumberEndpoint()}/messages`;
 
-    return rateLimiter.scheduleMessage(
-      this.config.whatsappPhoneNumberId,
-      async () => {
-        try {
-          const response = await this.client.post(path, data);
-          eventEmitter.emitMessageSent(
-            response.data.messages?.[0]?.id || 'unknown',
-            this.config.whatsappPhoneNumberId,
-            data
-          );
-          return response;
-        } catch (error) {
-          eventEmitter.emitMessageFailed(
-            error,
-            this.config.whatsappPhoneNumberId,
-            data
-          );
-          throw error;
-        }
-      },
-      isTemplate
-    );
+    try {
+      const response = await this.client.post(path, data);
+      eventEmitter.emitMessageSent(
+        response.data.messages?.[0]?.id || 'unknown',
+        this.config.whatsappPhoneNumberId,
+        data
+      );
+      return response;
+    } catch (error) {
+      eventEmitter.emitMessageFailed(
+        error,
+        this.config.whatsappPhoneNumberId,
+        data
+      );
+      throw error;
+    }
   }
 
   // Helper method to get phone number endpoint

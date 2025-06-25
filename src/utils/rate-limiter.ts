@@ -2,45 +2,27 @@
 import Bottleneck from 'bottleneck';
 import { eventEmitter } from './event-emitter.js';
 
-export class WhatsAppRateLimiter {
+export class WebhookRateLimiter {
   private limiters: Map<string, Bottleneck> = new Map();
 
-  // WhatsApp Cloud API rate limits (conservative estimates)
+  // Webhook rate limits to prevent abuse
   private readonly limits = {
-    // Per phone number limits - 80 messages per hour
-    messaging: {
-      maxConcurrent: 5,
-      minTime: 45000, // 45 seconds between requests (80 per hour)
-      reservoir: 80,
-      reservoirRefreshAmount: 80,
-      reservoirRefreshInterval: 60 * 60 * 1000, // 1 hour
-    },
-
-    // Template messages - 250 per day
-    templates: {
-      maxConcurrent: 2,
-      minTime: 345600, // ~345 seconds between template messages (250 per day)
-      reservoir: 250,
-      reservoirRefreshAmount: 250,
-      reservoirRefreshInterval: 24 * 60 * 60 * 1000, // 24 hours
-    },
-
-    // API endpoints - 100 requests per hour
-    api: {
+    // Webhook processing - prevent spam/abuse
+    webhook: {
       maxConcurrent: 10,
-      minTime: 36000, // 36 seconds between requests (100 per hour)
-      reservoir: 100,
-      reservoirRefreshAmount: 100,
-      reservoirRefreshInterval: 60 * 60 * 1000, // 1 hour
-    },
-
-    // Global limit - 1000 requests per hour
-    global: {
-      maxConcurrent: 20,
-      minTime: 3600, // 3.6 seconds between requests (1000 per hour)
+      minTime: 100, // 100ms between webhook processing
       reservoir: 1000,
       reservoirRefreshAmount: 1000,
-      reservoirRefreshInterval: 60 * 60 * 1000, // 1 hour
+      reservoirRefreshInterval: 60 * 60 * 1000, // 1000 webhooks per hour
+    },
+
+    // Event broadcasting to prevent SSE overload
+    events: {
+      maxConcurrent: 50,
+      minTime: 50, // 50ms between event broadcasts
+      reservoir: 2000,
+      reservoirRefreshAmount: 2000,
+      reservoirRefreshInterval: 60 * 60 * 1000, // 2000 events per hour
     },
   };
 
@@ -55,11 +37,11 @@ export class WhatsAppRateLimiter {
       const limiter = new Bottleneck(config);
 
       // Add event listeners for monitoring
-      limiter.on('failed', (error, jobInfo) => {
+      limiter.on('failed', (error, _jobInfo) => {
         eventEmitter.emitError(error, `rate_limiter:${limiterKey}`);
       });
 
-      limiter.on('retry', (error, _jobInfo) => {
+      limiter.on('retry', (_error, _jobInfo) => {
         eventEmitter.emitRateLimitHit(limiterKey, 1000); // Default 1 second delay
       });
 
@@ -69,59 +51,38 @@ export class WhatsAppRateLimiter {
     return this.limiters.get(limiterKey)!;
   }
 
-  async scheduleMessage(
-    phoneNumberId: string,
-    messageFunction: () => Promise<any>,
-    isTemplate: boolean = false
+  async scheduleWebhook(
+    webhookFunction: () => Promise<any>,
+    identifier: string = 'default'
   ): Promise<any> {
-    const limitType = isTemplate ? 'templates' : 'messaging';
-    const messageLimiter = this.getLimiter(phoneNumberId, limitType);
-    const globalLimiter = this.getLimiter('global', 'global');
-
-    // Chain the limiters - message must pass both phone-specific and global limits
-    return globalLimiter.schedule(() =>
-      messageLimiter.schedule(messageFunction)
-    );
+    const webhookLimiter = this.getLimiter(identifier, 'webhook');
+    return webhookLimiter.schedule(webhookFunction);
   }
 
-  async scheduleApiCall(
-    _endpoint: string,
-    apiFunction: () => Promise<any>,
-    identifier: string = 'global'
+  async scheduleEvent(
+    eventFunction: () => Promise<any>,
+    identifier: string = 'default'
   ): Promise<any> {
-    const apiLimiter = this.getLimiter(identifier, 'api');
-    const globalLimiter = this.getLimiter('global', 'global');
-
-    // Chain the limiters - API call must pass both
-    return globalLimiter.schedule(() => apiLimiter.schedule(apiFunction));
+    const eventLimiter = this.getLimiter(identifier, 'events');
+    return eventLimiter.schedule(eventFunction);
   }
 
-  async getRateLimitStatus(phoneNumberId?: string): Promise<any> {
-    const globalLimiter = this.limiters.get('global:global');
+  async getRateLimitStatus(): Promise<any> {
+    const webhookLimiter = this.limiters.get('default:webhook');
+    const eventsLimiter = this.limiters.get('default:events');
+
     const status: any = {
-      global: {
-        running: globalLimiter?.running() || 0,
-        queued: globalLimiter?.queued() || 0,
-        reservoir: (await globalLimiter?.currentReservoir()) || 0,
+      webhook: {
+        running: webhookLimiter?.running() || 0,
+        queued: webhookLimiter?.queued() || 0,
+        reservoir: (await webhookLimiter?.currentReservoir()) || 0,
+      },
+      events: {
+        running: eventsLimiter?.running() || 0,
+        queued: eventsLimiter?.queued() || 0,
+        reservoir: (await eventsLimiter?.currentReservoir()) || 0,
       },
     };
-
-    if (phoneNumberId) {
-      const messagingLimiter = this.limiters.get(`${phoneNumberId}:messaging`);
-      const templatesLimiter = this.limiters.get(`${phoneNumberId}:templates`);
-
-      status.messaging = {
-        running: messagingLimiter?.running() || 0,
-        queued: messagingLimiter?.queued() || 0,
-        reservoir: (await messagingLimiter?.currentReservoir()) || 0,
-      };
-
-      status.templates = {
-        running: templatesLimiter?.running() || 0,
-        queued: templatesLimiter?.queued() || 0,
-        reservoir: (await templatesLimiter?.currentReservoir()) || 0,
-      };
-    }
 
     return status;
   }
@@ -138,11 +99,11 @@ export class WhatsAppRateLimiter {
   }
 }
 
-export const rateLimiter = new WhatsAppRateLimiter();
+export const webhookRateLimiter = new WebhookRateLimiter();
 
 // Clean up old rate limit buckets every hour
 if (typeof setInterval !== 'undefined') {
   setInterval(async () => {
-    await rateLimiter.cleanup();
+    await webhookRateLimiter.cleanup();
   }, 3600000);
 }

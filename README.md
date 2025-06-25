@@ -26,11 +26,20 @@ A production-ready Node.js Model Context Protocol (MCP) server that provides sea
 - Two-step verification management
 - Check registration status
 
+### 📊 **Analytics & Monitoring**
+- Real-time WhatsApp event streaming
+- Message delivery analytics
+- Conversation cost tracking
+- Template performance metrics
+- Browse analytics via `whatsapp://analytics/*`
+
 ### 🗄️ **Database Integration** (Optional)
 - PostgreSQL support for data persistence
 - Browse database tables and schemas via resources
 
 ### 🛠️ **Developer Experience**
+- Dual transport modes: STDIO (for Claude Desktop) and SSE (for web clients)
+- Real-time webhook processing and event broadcasting
 - Comprehensive error handling with detailed WhatsApp API error information
 - Pre-built prompts for common tasks
 - TypeScript with strict type checking
