@@ -1,7 +1,7 @@
-// src/api/verification.ts
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { WhatsAppApiClient } from '../utils/api-client.js';
+import { formatApiError, formatSuccessResponse } from '../utils/error-handler.js';
 
 // Define schema for enabling two-step verification
 const EnableTwoStepVerificationSchema = z.object({
@@ -28,23 +28,9 @@ export function setupVerificationTools(
           }
         );
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Two-step verification enabled: ${JSON.stringify(response.data, null, 2)}`,
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Two-step verification enabled successfully');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error enabling two-step verification: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'enabling two-step verification');
       }
     }
   );
@@ -59,23 +45,9 @@ export function setupVerificationTools(
           `${apiClient.getPhoneNumberEndpoint()}/two_step`
         );
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Two-step verification disabled: ${JSON.stringify(response.data, null, 2)}`,
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Two-step verification disabled successfully');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error disabling two-step verification: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'disabling two-step verification');
       }
     }
   );

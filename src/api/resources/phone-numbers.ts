@@ -46,6 +46,7 @@ export function setupPhoneNumberResources(
             {
               uri: uri.href,
               text: formattedData,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -55,6 +56,7 @@ export function setupPhoneNumberResources(
             {
               uri: uri.href,
               text: `Error fetching phone numbers: ${error.message}`,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -108,6 +110,7 @@ Last Updated: ${new Date().toISOString()}
             {
               uri: uri.href,
               text: formattedData,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -117,6 +120,7 @@ Last Updated: ${new Date().toISOString()}
             {
               uri: uri.href,
               text: `Error fetching phone number details: ${error.message}`,
+              mimeType: 'text/plain',
             },
           ],
         };

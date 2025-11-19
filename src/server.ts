@@ -25,6 +25,7 @@ import { setupAnalyticsResources } from './api/resources/analytics.js';
 // Import prompts
 import { setupWhatsAppPrompts } from './api/prompts/whatsapp-prompts.js';
 import { eventEmitter } from './utils/event-emitter.js';
+import { WebhookHandler } from './webhook-handler.js';
 
 // Function to create and setup the MCP server with all tools and resources
 async function createMcpServer(config: Config, dbClient: DatabaseClient | null = null) {
@@ -49,7 +50,7 @@ async function createMcpServer(config: Config, dbClient: DatabaseClient | null =
   setupMessagesTools(server, apiClient);
   setupPhoneNumberTools(server, apiClient);
   setupVerificationTools(server, apiClient);
-  
+
   if (dbClient) {
     setupDatabaseTools(server, dbClient);
   }
@@ -59,7 +60,7 @@ async function createMcpServer(config: Config, dbClient: DatabaseClient | null =
   setupTemplateCatalogsResource(server, apiClient);
   setupPhoneNumberResources(server, apiClient);
   // setupAnalyticsResources(server, apiClient); // Disabled due to ResourceTemplate issues
-  
+
   if (dbClient) {
     setupDatabaseResources(server, dbClient);
   }
@@ -83,7 +84,8 @@ async function createMcpServer(config: Config, dbClient: DatabaseClient | null =
 - Browse whatsapp://analytics/conversations
 - Browse whatsapp://analytics/templates
 
-Note: Full analytics require WhatsApp Business API permissions.`
+Note: Full analytics require WhatsApp Business API permissions.`,
+        mimeType: 'text/plain'
       }]
     };
   });
@@ -92,13 +94,13 @@ Note: Full analytics require WhatsApp Business API permissions.`
     try {
       const endTime = Math.floor(Date.now() / 1000);
       const startTime = endTime - 30 * 24 * 60 * 60; // 30 days ago
-      
+
       const response = await apiClient.get(
         `${apiClient.getBusinessAccountEndpoint()}/insights?` +
-          `metric=messages_sent,messages_delivered&` +
-          `start=${startTime}&` +
-          `end=${endTime}&` +
-          `granularity=DAILY`
+        `metric=messages_sent,messages_delivered&` +
+        `start=${startTime}&` +
+        `end=${endTime}&` +
+        `granularity=DAILY`
       );
 
       const insights = response.data.data;
@@ -125,14 +127,16 @@ Note: Full analytics require WhatsApp Business API permissions.`
       return {
         contents: [{
           uri: 'whatsapp://analytics/messaging',
-          text: analyticsData
+          text: analyticsData,
+          mimeType: 'text/plain'
         }]
       };
     } catch (error: any) {
       return {
         contents: [{
           uri: 'whatsapp://analytics/messaging',
-          text: `Error retrieving messaging analytics: ${error.response?.data?.error?.message || error.message}\n\nNote: This requires WhatsApp Business Management API permissions.`
+          text: `Error retrieving messaging analytics: ${error.response?.data?.error?.message || error.message}\n\nNote: This requires WhatsApp Business Management API permissions.`,
+          mimeType: 'text/plain'
         }]
       };
     }
@@ -155,14 +159,16 @@ Note: Full analytics require WhatsApp Business API permissions.`
           return {
             contents: [{
               uri: uri.href,
-              text: `WhatsApp Contacts:\n==================\n\n${contacts}`
+              text: `WhatsApp Contacts:\n==================\n\n${contacts}`,
+              mimeType: 'text/plain'
             }]
           };
         } catch (error: any) {
           return {
             contents: [{
               uri: uri.href,
-              text: `Error loading contacts: ${error.message}`
+              text: `Error loading contacts: ${error.message}`,
+              mimeType: 'text/plain'
             }]
           };
         }
@@ -170,7 +176,8 @@ Note: Full analytics require WhatsApp Business API permissions.`
         return {
           contents: [{
             uri: uri.href,
-            text: 'Database not connected'
+            text: 'Database not connected',
+            mimeType: 'text/plain'
           }]
         };
       }
@@ -203,7 +210,7 @@ export async function startMcpServerStdio(config: Config) {
   // Use stdio transport for Claude Desktop
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  
+
   return { server, transport };
 }
 
@@ -242,9 +249,16 @@ export async function startMcpServer(config: Config) {
     const eventData = JSON.stringify(event);
 
     // Broadcast to all connected transports
-    Object.values(transports).forEach(transport => {
+    Object.values(transports).forEach(async transport => {
       try {
-        // Send event as SSE data via the response object
+        // Send standard MCP notification
+        await transport.send({
+          jsonrpc: '2.0',
+          method: 'notifications/message',
+          params: event,
+        });
+
+        // Keep legacy SSE for backward compatibility (optional, but good for now)
         const res = (transport as any).response;
         if (res && !res.destroyed) {
           res.write(`data: ${eventData}\n\n`);
@@ -260,10 +274,10 @@ export async function startMcpServer(config: Config) {
     try {
       // Create a new transport for each request (stateless HTTP)
       const transport = new SSEServerTransport('/mcp', res);
-      
+
       // Connect the server to this transport
       await server.connect(transport);
-      
+
       // Handle the request through the transport
       await transport.handlePostMessage(req, res);
     } catch (error) {
@@ -307,83 +321,14 @@ export async function startMcpServer(config: Config) {
     res.status(200).json({ status: 'ok' });
   });
 
-  // Add webhook verification endpoint (GET)
-  app.get('/webhook', (req: Request, res: Response) => {
-    const mode = req.query['hub.mode'];
-    const token = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
+  // Initialize Webhook Handler
+  const webhookHandler = new WebhookHandler(process.env.WEBHOOK_VERIFY_TOKEN || '');
 
-    // Verify the webhook token
-    if (mode === 'subscribe' && token === process.env.WEBHOOK_VERIFY_TOKEN) {
-      console.log('Webhook verified successfully');
-      res.status(200).send(challenge);
-    } else {
-      console.error('Failed to verify webhook');
-      res.status(403).send('Forbidden');
-    }
-  });
+  // Add webhook verification endpoint (GET)
+  app.get('/webhook', (req: Request, res: Response) => webhookHandler.verify(req, res));
 
   // Add webhook receiver endpoint (POST)
-  app.post('/webhook', async (req: Request, res: Response) => {
-    const body = req.body;
-
-    console.log('Webhook received:', JSON.stringify(body, null, 2));
-
-    // Process incoming webhook data (simplified - no rate limiting on WhatsApp APIs)
-    if (body.object === 'whatsapp_business_account') {
-      body.entry?.forEach((entry: any) => {
-        entry.changes?.forEach((change: any) => {
-          if (change.field === 'messages') {
-            const value = change.value;
-
-            // Handle incoming messages
-            if (value.messages) {
-              value.messages.forEach((message: any) => {
-                eventEmitter.emitWhatsAppEvent({
-                  type: 'message_received',
-                  timestamp: new Date(),
-                  data: {
-                    messageId: message.id,
-                    from: message.from,
-                    timestamp: message.timestamp,
-                    type: message.type,
-                    content:
-                      message.text ||
-                      message.image ||
-                      message.audio ||
-                      message.document ||
-                      message.video ||
-                      message.sticker ||
-                      message,
-                    phoneNumberId: value.metadata?.phone_number_id,
-                  },
-                });
-              });
-            }
-
-            // Handle message status updates
-            if (value.statuses) {
-              value.statuses.forEach((status: any) => {
-                eventEmitter.emitWhatsAppEvent({
-                  type: 'message_status_update',
-                  timestamp: new Date(),
-                  data: {
-                    messageId: status.id,
-                    status: status.status,
-                    timestamp: status.timestamp,
-                    recipientId: status.recipient_id,
-                    phoneNumberId: value.metadata?.phone_number_id,
-                  },
-                });
-              });
-            }
-          }
-        });
-      });
-    }
-
-    res.status(200).send('OK');
-  });
+  app.post('/webhook', async (req: Request, res: Response) => webhookHandler.handle(req, res));
 
   // Start the server
   const httpServer = app.listen(config.serverPort, () => {

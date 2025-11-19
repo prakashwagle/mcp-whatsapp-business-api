@@ -2,10 +2,12 @@
 import { AxiosError } from 'axios';
 
 export interface ErrorResponse {
+  [key: string]: unknown;
   content: Array<{
     type: 'text';
     text: string;
   }>;
+  isError?: boolean;
 }
 
 /**
@@ -50,6 +52,7 @@ export function formatApiError(error: any, operation: string): ErrorResponse {
         text: errorMessage,
       },
     ],
+    isError: true,
   };
 }
 

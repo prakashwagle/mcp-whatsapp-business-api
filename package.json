@@ -16,7 +16,7 @@
         "lint:fix": "eslint src --ext .ts --fix",
         "format": "prettier --write \"src/**/*.{ts,js,json}\"",
         "format:check": "prettier --check \"src/**/*.{ts,js,json}\"",
-        "test": "echo \"No tests specified yet\" && exit 0"
+        "test": "vitest run"
     },
     "keywords": [
         "mcp",
@@ -39,14 +39,17 @@
     "devDependencies": {
         "@types/express": "^5.0.1",
         "@types/node": "^22.15.21",
+        "@types/supertest": "^6.0.3",
         "@typescript-eslint/eslint-plugin": "^8.32.1",
         "@typescript-eslint/parser": "^8.32.1",
         "eslint": "^9.27.0",
         "eslint-config-prettier": "^10.1.5",
         "eslint-plugin-prettier": "^5.4.0",
         "prettier": "^3.5.3",
+        "supertest": "^7.1.4",
         "ts-node": "^10.9.2",
         "tsx": "^4.19.3",
-        "typescript": "^5.5.2"
+        "typescript": "^5.5.2",
+        "vitest": "^4.0.10"
     }
 }

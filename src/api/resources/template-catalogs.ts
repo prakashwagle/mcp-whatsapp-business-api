@@ -42,6 +42,7 @@ export function setupTemplateCatalogsResource(
             {
               uri: uri.href,
               text: formattedTemplates,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -50,7 +51,8 @@ export function setupTemplateCatalogsResource(
           contents: [
             {
               uri: uri.href,
-              text: `Error retrieving message templates: ${error.message}`,
+              text: `Error fetching message templates: ${error.message}`,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -86,35 +88,37 @@ export function setupTemplateCatalogsResource(
               {
                 uri: uri.href,
                 text: `Template "${template_name}" not found.`,
+                mimeType: 'text/plain',
               },
             ],
           };
         }
 
         // Format the template details
-        let formattedTemplate = `Template: ${template.name}\n`;
-        formattedTemplate += `Status: ${template.status}\n`;
-        formattedTemplate += `Category: ${template.category}\n`;
-        formattedTemplate += `Language: ${template.language}\n\n`;
+        let formattedData = `Template: ${template.name}\n`;
+        formattedData += `Status: ${template.status}\n`;
+        formattedData += `Category: ${template.category}\n`;
+        formattedData += `Language: ${template.language}\n\n`;
 
         // Components
-        formattedTemplate += 'Components:\n';
+        formattedData += 'Components:\n';
         template.components.forEach((component: any) => {
-          formattedTemplate += `- Type: ${component.type}\n`;
-          formattedTemplate += `  Text: ${component.text || 'N/A'}\n`;
+          formattedData += `- Type: ${component.type}\n`;
+          formattedData += `  Text: ${component.text || 'N/A'}\n`;
 
           if (component.example) {
-            formattedTemplate += `  Example: ${JSON.stringify(component.example)}\n`;
+            formattedData += `  Example: ${JSON.stringify(component.example)}\n`;
           }
 
-          formattedTemplate += '\n';
+          formattedData += '\n';
         });
 
         return {
           contents: [
             {
               uri: uri.href,
-              text: formattedTemplate,
+              text: formattedData,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -123,7 +127,8 @@ export function setupTemplateCatalogsResource(
           contents: [
             {
               uri: uri.href,
-              text: `Error retrieving template details: ${error.message}`,
+              text: `Error fetching template details: ${error.message}`,
+              mimeType: 'text/plain',
             },
           ],
         };

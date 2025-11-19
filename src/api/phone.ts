@@ -1,7 +1,7 @@
-// src/api/phone.ts
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { WhatsAppApiClient } from '../utils/api-client.js';
+import { formatApiError, formatSuccessResponse } from '../utils/error-handler.js';
 
 // Define schema for getting phone numbers
 const GetPhoneNumbersSchema = z.object({});
@@ -31,23 +31,9 @@ export function setupPhoneNumberTools(
           `${apiClient.getBusinessAccountEndpoint()}/phone_numbers`
         );
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Phone numbers: ${JSON.stringify(response.data, null, 2)}`,
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Phone numbers retrieved successfully');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error getting phone numbers: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'getting phone numbers');
       }
     }
   );
@@ -63,23 +49,9 @@ export function setupPhoneNumberTools(
           apiClient.getPhoneNumberEndpoint().substring(1);
         const response = await apiClient.get(`/${phoneNumberId}`);
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Phone number details: ${JSON.stringify(response.data, null, 2)}`,
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Phone number details retrieved successfully');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error getting phone number details: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'getting phone number details');
       }
     }
   );
@@ -98,23 +70,9 @@ export function setupPhoneNumberTools(
           }
         );
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Verification code requested: ${JSON.stringify(response.data, null, 2)}`,
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Verification code requested successfully');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error requesting verification code: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'requesting verification code');
       }
     }
   );

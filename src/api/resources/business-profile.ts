@@ -40,6 +40,7 @@ Vertical: ${profileData.vertical || 'Not set'}
             {
               uri: uri.href,
               text: formattedProfile,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -49,6 +50,7 @@ Vertical: ${profileData.vertical || 'Not set'}
             {
               uri: uri.href,
               text: `Error retrieving business profile: ${error.message}`,
+              mimeType: 'text/plain',
             },
           ],
         };

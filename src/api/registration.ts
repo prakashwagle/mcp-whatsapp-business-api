@@ -1,7 +1,7 @@
-// src/api/registration.ts
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { WhatsAppApiClient } from '../utils/api-client.js';
+import { formatApiError, formatSuccessResponse } from '../utils/error-handler.js';
 
 // Define schema for registering a phone number
 const RegisterPhoneNumberSchema = z.object({
@@ -35,23 +35,9 @@ export function setupRegistrationTools(
           }
         );
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Phone number registration initiated: ${JSON.stringify(response.data, null, 2)}`,
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Phone number registration initiated');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error registering phone number: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'registering phone number');
       }
     }
   );
@@ -69,23 +55,9 @@ export function setupRegistrationTools(
           }
         );
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Phone number deregistration initiated: ${JSON.stringify(response.data, null, 2)}`,
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Phone number deregistration initiated');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error deregistering phone number: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'deregistering phone number');
       }
     }
   );
@@ -104,23 +76,9 @@ export function setupRegistrationTools(
           }
         );
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Phone number verification completed: ${JSON.stringify(response.data, null, 2)}`,
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Phone number verification completed');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error verifying phone number: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'verifying phone number');
       }
     }
   );
@@ -132,23 +90,9 @@ export function setupRegistrationTools(
         `${apiClient.getBusinessAccountEndpoint()}/phone_numbers`
       );
 
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Phone number registration status: ${JSON.stringify(response.data, null, 2)}`,
-          },
-        ],
-      };
+      return formatSuccessResponse(response.data, 'Phone number registration status');
     } catch (error: any) {
-      return {
-        content: [
-          {
-            type: 'text',
-            text: `Error checking phone number registration status: ${error.message}`,
-          },
-        ],
-      };
+      return formatApiError(error, 'checking phone number registration status');
     }
   });
 }

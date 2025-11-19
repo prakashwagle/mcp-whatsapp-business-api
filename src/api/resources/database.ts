@@ -35,6 +35,7 @@ export function setupDatabaseResources(
             {
               uri: uri.href,
               text: formattedTables,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -93,6 +94,7 @@ export function setupDatabaseResources(
             {
               uri: uri.href,
               text: formattedSchema,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -140,6 +142,7 @@ export function setupDatabaseResources(
             {
               uri: uri.href,
               text: formattedData,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -181,6 +184,7 @@ export function setupDatabaseResources(
             {
               uri: uri.href,
               text: statusInfo,
+              mimeType: 'text/plain',
             },
           ],
         };
@@ -190,6 +194,7 @@ export function setupDatabaseResources(
             {
               uri: uri.href,
               text: `Error checking database status: ${error.message}`,
+              mimeType: 'text/plain',
             },
           ],
         };

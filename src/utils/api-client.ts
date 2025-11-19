@@ -1,6 +1,7 @@
 // WhatsApp API client utilities
-import axios, { AxiosInstance, AxiosRequestConfig } from 'axios';
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Config } from './config.js';
+import { WhatsAppResponse } from '../types/whatsapp.js';
 import { eventEmitter } from './event-emitter.js';
 
 export class WhatsAppApiClient {
@@ -62,28 +63,28 @@ export class WhatsAppApiClient {
     );
   }
 
-  async get(path: string, config?: AxiosRequestConfig) {
-    return this.client.get(path, config);
+  async get<T = any>(endpoint: string, config?: AxiosRequestConfig): Promise<AxiosResponse<WhatsAppResponse<T>>> {
+    return this.client.get(endpoint, config);
   }
 
-  async post(path: string, data: any, config?: AxiosRequestConfig) {
-    return this.client.post(path, data, config);
+  async post<T = any>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<WhatsAppResponse<T>>> {
+    return this.client.post(endpoint, data, config);
   }
 
-  async patch(path: string, data: any, config?: AxiosRequestConfig) {
-    return this.client.patch(path, data, config);
+  async patch<T = any>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<AxiosResponse<WhatsAppResponse<T>>> {
+    return this.client.patch(endpoint, data, config);
   }
 
-  async delete(path: string, config?: AxiosRequestConfig) {
-    return this.client.delete(path, config);
+  async delete<T = any>(endpoint: string, config?: AxiosRequestConfig): Promise<AxiosResponse<WhatsAppResponse<T>>> {
+    return this.client.delete(endpoint, config);
   }
 
   // Special method for sending messages with event tracking
-  async sendMessage(data: any) {
-    const path = `${this.getPhoneNumberEndpoint()}/messages`;
+  async sendMessage(data: any): Promise<AxiosResponse<WhatsAppResponse>> {
+    const endpoint = `${this.getPhoneNumberEndpoint()}/messages`;
 
     try {
-      const response = await this.client.post(path, data);
+      const response = await this.post(endpoint, data);
       eventEmitter.emitMessageSent(
         response.data.messages?.[0]?.id || 'unknown',
         this.config.whatsappPhoneNumberId,

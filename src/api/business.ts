@@ -1,7 +1,7 @@
-// src/api/business.ts
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { WhatsAppApiClient } from '../utils/api-client.js';
+import { formatApiError, formatSuccessResponse } from '../utils/error-handler.js';
 
 // Define schema for business profile data
 const BusinessProfileSchema = z.object({
@@ -56,23 +56,9 @@ export function setupBusinessProfileTools(
           `${apiClient.getPhoneNumberEndpoint()}/whatsapp_business_profile`
         );
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: JSON.stringify(response.data, null, 2),
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Business profile retrieved successfully');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error getting business profile: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'getting business profile');
       }
     }
   );
@@ -108,23 +94,9 @@ export function setupBusinessProfileTools(
           }
         );
 
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Business profile updated successfully: ${JSON.stringify(response.data, null, 2)}`,
-            },
-          ],
-        };
+        return formatSuccessResponse(response.data, 'Business profile updated successfully');
       } catch (error: any) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error updating business profile: ${error.message}`,
-            },
-          ],
-        };
+        return formatApiError(error, 'updating business profile');
       }
     }
   );
